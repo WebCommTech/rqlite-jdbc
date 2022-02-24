@@ -49,9 +49,9 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
     // QueryResults
     public String error;
     public Object[][] values;
+	Gson gson = new Gson();
 
 	public CoreResultSet(CoreStatement stmt, QueryResults results) throws SQLException {
-		Gson gson = new Gson();
 		System.out.println("results " + gson.toJson(results));
 		this.stmt = stmt;
 		this.conn = (RQLiteConnection) stmt.getConnection();
@@ -281,7 +281,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	public String getString(int columnIndex) throws SQLException {
 		if(values != null) {
 			Object result = values[row-1][columnIndex];
-			if(result != null) {
+			if(isNotNull(result, false)) {
 	
 				return result.toString();	
 			}
@@ -293,7 +293,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	public boolean getBoolean(int columnIndex) throws SQLException {
 		if(values != null) {
 			Object result = values[row-1][columnIndex];
-			if(result != null && StringUtils.isNotBlank(result.toString())) {
+			if(isNotNull(result)) {
 	
 				return Boolean.parseBoolean(result.toString());
 			}
@@ -311,7 +311,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	public short getShort(int columnIndex) throws SQLException {
 		if(values != null) {
 			Object result = values[row-1][columnIndex];
-			if(result != null && StringUtils.isNotBlank(result.toString())) {
+			if(isNotNull(result)) {
 	
 				return Short.parseShort(result.toString());
 			}
@@ -319,13 +319,34 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 		return 0;
 	}
 
+	private boolean isNotNull(Object result) {
+		return isNotNull(result, true);
+	}
+	
+	private boolean isNotNull(Object result, boolean checkBlank) {
+		if(result != null ) {
+
+			System.out.println("result " + gson.toJson(result));
+			
+			if(gson.toJson(result).equals("{}") ) {
+				return false;
+			}
+			
+			if(checkBlank && StringUtils.isBlank(result.toString())) {
+				return false;
+			}
+			
+			return true;
+		}
+		return false;
+	}
+
 	@Override
 	public int getInt(int columnIndex) throws SQLException {
 		if(values != null) {
 			Object result = values[row-1][columnIndex];
-			if(result != null && StringUtils.isNotBlank(result.toString())) {
-	
-				return Integer.parseInt(result.toString());
+			if(isNotNull(result)) {
+				return Integer.parseInt(gson.toJson(result));
 			}
 		}
 		return 0;
@@ -335,7 +356,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	public long getLong(int columnIndex) throws SQLException {
 		if(values != null) {
 			Object result = values[row-1][columnIndex];
-			if(result != null && StringUtils.isNotBlank(result.toString())) {
+			if(isNotNull(result)) {
 	
 				return Long.parseLong(result.toString());
 			}
@@ -347,7 +368,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	public float getFloat(int columnIndex) throws SQLException {
 		if(values != null) {
 			Object result = values[row-1][columnIndex];
-			if(result != null && StringUtils.isNotBlank(result.toString())) {
+			if(isNotNull(result)) {
 	
 				return Float.parseFloat(result.toString());
 			}
@@ -359,7 +380,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	public double getDouble(int columnIndex) throws SQLException {
 		if(values != null) {
 			Object result = values[row-1][columnIndex];
-			if(result != null && StringUtils.isNotBlank(result.toString())) {
+			if(isNotNull(result)) {
 	
 				return Double.parseDouble(result.toString());
 			}
@@ -371,7 +392,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
 		if(values != null) {
 			Object result = values[row-1][columnIndex];
-			if(result != null && StringUtils.isNotBlank(result.toString())) {
+			if(isNotNull(result)) {
 	
 				return new BigDecimal(result.toString()).setScale(scale);
 			}
@@ -389,7 +410,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	public Date getDate(int columnIndex) throws SQLException {
 		if(values != null) {
 			Object result = values[row-1][columnIndex];
-			if(result != null && StringUtils.isNotBlank(result.toString())) {
+			if(isNotNull(result)) {
 
                 return new Date(new Long(result.toString()) * conn.getDatabase().getConfig().dateMultiplier);
 			}
@@ -401,7 +422,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	public Time getTime(int columnIndex) throws SQLException {
 		if(values != null) {
 			Object result = values[row-1][columnIndex];
-			if(result != null && StringUtils.isNotBlank(result.toString())) {
+			if(isNotNull(result)) {
 
                 return new Time(new Long(result.toString()) * conn.getDatabase().getConfig().dateMultiplier);
 			}
@@ -413,7 +434,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	public Timestamp getTimestamp(int columnIndex) throws SQLException {
 		if(values != null) {
 			Object result = values[row-1][columnIndex];
-			if(result != null && StringUtils.isNotBlank(result.toString())) {
+			if(isNotNull(result)) {
 				System.out.println("cols " + result.toString());
 
                 return new Timestamp(new Long(result.toString()) * conn.getDatabase().getConfig().dateMultiplier);
@@ -1079,7 +1100,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	public Date getDate(int columnIndex, Calendar cal) throws SQLException {
 		if(values != null) {
 			Object result = values[row-1][columnIndex];
-			if(result != null && StringUtils.isNotBlank(result.toString())) {
+			if(isNotNull(result)) {
 
                 cal.setTimeInMillis(new Long(result.toString()) * conn.getDatabase().getConfig().dateMultiplier);
                 return new Date(cal.getTime().getTime());
@@ -1097,7 +1118,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	public Time getTime(int columnIndex, Calendar cal) throws SQLException {
 		if(values != null) {
 			Object result = values[row-1][columnIndex];
-			if(result != null && StringUtils.isNotBlank(result.toString())) {
+			if(isNotNull(result)) {
 
                 cal.setTimeInMillis(new Long(result.toString()) * conn.getDatabase().getConfig().dateMultiplier);
                 return new Time(cal.getTime().getTime());
@@ -1115,7 +1136,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	public Timestamp getTimestamp(int columnIndex, Calendar cal) throws SQLException {
 		if(values != null) {
 			Object result = values[row-1][columnIndex];
-			if(result != null && StringUtils.isNotBlank(result.toString())) {
+			if(isNotNull(result)) {
 				cal.setTimeInMillis(new Long(result.toString()) * conn.getDatabase().getConfig().dateMultiplier);
 
                 return new Timestamp(cal.getTime().getTime());
@@ -1133,7 +1154,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	public URL getURL(int columnIndex) throws SQLException {
 		if(values != null) {
 			Object result = values[row-1][columnIndex];
-			if(result != null && StringUtils.isNotBlank(result.toString())) {
+			if(isNotNull(result)) {
 	
 				try {
 					return new URL(result.toString());
@@ -1490,9 +1511,8 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
 		if(values != null) {
 			Object result = values[row-1][columnIndex];
-			if(result != null && StringUtils.isNotBlank(result.toString())) {
+			if(isNotNull(result)) {
 	
-				Gson gson = new Gson();
 				return gson.fromJson(result.toString(), type);
 			}
 		}

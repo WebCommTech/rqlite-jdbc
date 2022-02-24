@@ -30,11 +30,11 @@ public class CorePreparedStatement extends CoreStatement implements PreparedStat
 
     protected int paramCount;
     protected int        batchPos;
+	Gson gson = new Gson();
     
 	public CorePreparedStatement(RQLiteConnection c, String sql) {
 		super(c);
 
-		Gson gson = new Gson();
 		System.out.println("CorePreparedStatement sql " + gson.toJson(sql));
         this.sql = sql;
         setParamCount();
@@ -52,12 +52,11 @@ public class CorePreparedStatement extends CoreStatement implements PreparedStat
 		System.out.println("setParamCount : " + count);
 	}
 	
-    protected void batch(int pos, String value) throws SQLException {
-		Gson gson = new Gson();
+    protected void batch(int pos, Object value) throws SQLException {
 		System.out.println("pos " + gson.toJson(pos));
 		System.out.println("value " + gson.toJson(value));
         if (batch == null) {
-            batch = new String[paramCount+1];
+            batch = new Object[paramCount+1];
             batch[0] = sql;
             batchPos = 1;
         }
@@ -121,7 +120,6 @@ public class CorePreparedStatement extends CoreStatement implements PreparedStat
 	@Override
 	public ResultSet executeQuery() throws SQLException {
 		if(batch != null) {
-			Gson gson = new Gson();
 			Object[] query = new Object[1];
 			query[0] = batch;
 			System.out.println("CorePreparedStatement executeQuery :" + gson.toJson(query));
@@ -136,7 +134,6 @@ public class CorePreparedStatement extends CoreStatement implements PreparedStat
 	@Override
 	public int executeUpdate() throws SQLException {
 		if(batch != null) {
-			Gson gson = new Gson();
 			Object[] query = new Object[1];
 			query[0] = batch;
 			System.out.println("CorePreparedStatement executeUpdate :" + gson.toJson(query));
@@ -150,7 +147,7 @@ public class CorePreparedStatement extends CoreStatement implements PreparedStat
 
 	@Override
 	public void setNull(int parameterIndex, int sqlType) throws SQLException {
-        batch(parameterIndex, "NULL"); // TODO
+        batch(parameterIndex, ""); // TODO
 	}
 
 	@Override
@@ -161,7 +158,6 @@ public class CorePreparedStatement extends CoreStatement implements PreparedStat
 	@Override
 	public void setByte(int parameterIndex, byte x) throws SQLException {
 		throw new SQLException("not implement");
-		
 	}
 
 	@Override
@@ -252,7 +248,6 @@ public class CorePreparedStatement extends CoreStatement implements PreparedStat
 
 	@Override
 	public void setObject(int parameterIndex, Object x) throws SQLException {
-		Gson gson = new Gson();
 		System.out.println("setObject " + gson.toJson(x));
 		
         if (x == null) {

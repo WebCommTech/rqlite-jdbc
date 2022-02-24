@@ -18,7 +18,7 @@ public class CoreStatement implements Statement, Codes {
 
     public final RQLiteConnection conn;
     protected String     sql            = null;
-    protected String[]   batch          = null;
+    protected Object[]   batch          = null;
 
     public CoreStatement(RQLiteConnection c) {
         conn = c;
