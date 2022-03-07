@@ -87,8 +87,8 @@ public class CoreDatabaseMetaData implements DatabaseMetaData {
 
 	@Override
 	public String getDatabaseProductName() throws SQLException {
-		throw new SQLException("not implement");
-//		return null;
+//		throw new SQLException("not implement"); TODO
+		return null;
 	}
 
 	@Override
