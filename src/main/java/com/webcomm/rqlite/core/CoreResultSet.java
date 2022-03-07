@@ -20,9 +20,12 @@ import java.sql.SQLXML;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -51,8 +54,13 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
     public Object[][] values;
 	Gson gson = new Gson();
 
+	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+
 	public CoreResultSet(CoreStatement stmt, QueryResults results) throws SQLException {
 		System.out.println("results " + gson.toJson(results));
+		
+		sdf.setTimeZone(TimeZone.getTimeZone("GMT") );
+		
 		this.stmt = stmt;
 		this.conn = (RQLiteConnection) stmt.getConnection();
 		this.results = results;
@@ -412,6 +420,14 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 			Object result = values[row-1][columnIndex];
 			if(isNotNull(result)) {
 
+		        if (result instanceof String) {
+		        	try {
+		        		return new Date(sdf.parse(result.toString()).getTime());
+					} catch (ParseException e) {
+						System.out.println("cols " + result.toString());
+					}
+		        }
+
                 return new Date(new Long(result.toString()) * conn.getDatabase().getConfig().dateMultiplier);
 			}
 		}
@@ -423,6 +439,14 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 		if(values != null) {
 			Object result = values[row-1][columnIndex];
 			if(isNotNull(result)) {
+
+		        if (result instanceof String) {
+		        	try {
+		        		return new Time(sdf.parse(result.toString()).getTime());
+					} catch (ParseException e) {
+						System.out.println("cols " + result.toString());
+					}
+		        }
 
                 return new Time(new Long(result.toString()) * conn.getDatabase().getConfig().dateMultiplier);
 			}
@@ -437,7 +461,15 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 			if(isNotNull(result)) {
 				System.out.println("cols " + result.toString());
 
-                return new Timestamp(new Long(result.toString()) * conn.getDatabase().getConfig().dateMultiplier);
+		        if (result instanceof String) {
+		        	try {
+		        		return new Timestamp(sdf.parse(result.toString()).getTime());
+					} catch (ParseException e) {
+						System.out.println("cols " + result.toString());
+					}
+		        }
+
+		        return new Timestamp(new Long(result.toString()) * conn.getDatabase().getConfig().dateMultiplier);
 			}
 		}
 		return null;
@@ -1102,6 +1134,15 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 			Object result = values[row-1][columnIndex];
 			if(isNotNull(result)) {
 
+		        if (result instanceof String) {
+		        	try {
+		                cal.setTimeInMillis(sdf.parse(result.toString()).getTime());
+		                return new Date(cal.getTime().getTime());
+					} catch (ParseException e) {
+						System.out.println("cols " + result.toString());
+					}
+		        }
+
                 cal.setTimeInMillis(new Long(result.toString()) * conn.getDatabase().getConfig().dateMultiplier);
                 return new Date(cal.getTime().getTime());
 			}
@@ -1120,6 +1161,15 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 			Object result = values[row-1][columnIndex];
 			if(isNotNull(result)) {
 
+		        if (result instanceof String) {
+		        	try {
+		                cal.setTimeInMillis(sdf.parse(result.toString()).getTime());
+		                return new Time(cal.getTime().getTime());
+					} catch (ParseException e) {
+						System.out.println("cols " + result.toString());
+					}
+		        }
+
                 cal.setTimeInMillis(new Long(result.toString()) * conn.getDatabase().getConfig().dateMultiplier);
                 return new Time(cal.getTime().getTime());
 			}
@@ -1137,8 +1187,17 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 		if(values != null) {
 			Object result = values[row-1][columnIndex];
 			if(isNotNull(result)) {
-				cal.setTimeInMillis(new Long(result.toString()) * conn.getDatabase().getConfig().dateMultiplier);
 
+		        if (result instanceof String) {
+		        	try {
+		                cal.setTimeInMillis(sdf.parse(result.toString()).getTime());
+		                return new Timestamp(cal.getTime().getTime());
+					} catch (ParseException e) {
+						System.out.println("cols " + result.toString());
+					}
+		        }
+		        
+				cal.setTimeInMillis(new Long(result.toString()) * conn.getDatabase().getConfig().dateMultiplier);
                 return new Timestamp(cal.getTime().getTime());
 			}
 		}
