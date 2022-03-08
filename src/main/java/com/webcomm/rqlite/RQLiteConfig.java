@@ -83,9 +83,9 @@ public class RQLiteConfig {
             pragmaParams.add(each.pragmaName);
         }
 
-        if(conn instanceof RQLiteConnection) {
-        	RQLiteConnection sqliteConn = (RQLiteConnection) conn;
-        }
+//        if(conn instanceof RQLiteConnection) {
+//        	RQLiteConnection sqliteConn = (RQLiteConnection) conn;
+//        }
         pragmaParams.remove(Pragma.USE_PASSWORD.pragmaName);
 
 

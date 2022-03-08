@@ -147,7 +147,7 @@ public class CorePreparedStatement extends CoreStatement implements PreparedStat
 
 	@Override
 	public void setNull(int parameterIndex, int sqlType) throws SQLException {
-        batch(parameterIndex, ""); // TODO
+        batch(parameterIndex, ""); // TODO setNull
 	}
 
 	@Override
@@ -162,27 +162,27 @@ public class CorePreparedStatement extends CoreStatement implements PreparedStat
 
 	@Override
 	public void setShort(int parameterIndex, short x) throws SQLException {
-        batch(parameterIndex, new Short(x).toString());
+        batch(parameterIndex, x);
 	}
 
 	@Override
 	public void setInt(int parameterIndex, int x) throws SQLException {
-        batch(parameterIndex, new Integer(x).toString());
+        batch(parameterIndex, x);
 	}
 
 	@Override
 	public void setLong(int parameterIndex, long x) throws SQLException {
-        batch(parameterIndex, new Long(x).toString());
+        batch(parameterIndex, x);
 	}
 
 	@Override
 	public void setFloat(int parameterIndex, float x) throws SQLException {
-        batch(parameterIndex, new Float(x).toString());
+        batch(parameterIndex, x);
 	}
 
 	@Override
 	public void setDouble(int parameterIndex, double x) throws SQLException {
-        batch(parameterIndex, new Double(x).toString());
+        batch(parameterIndex, x);
 	}
 
 	@Override
@@ -257,28 +257,28 @@ public class CorePreparedStatement extends CoreStatement implements PreparedStat
             setDateByMilliseconds(parameterIndex, ((java.util.Date) x).getTime());
         }
         else if (x instanceof Date) {
-            setDateByMilliseconds(parameterIndex, new Long(((Date) x).getTime()));
+            setDateByMilliseconds(parameterIndex, ((Date) x).getTime());
         }
         else if (x instanceof Time) {
-            setDateByMilliseconds(parameterIndex, new Long(((Time) x).getTime()));
+            setDateByMilliseconds(parameterIndex, ((Time) x).getTime());
         }
         else if (x instanceof Timestamp) {
-            setDateByMilliseconds(parameterIndex, new Long(((Timestamp) x).getTime()));
+            setDateByMilliseconds(parameterIndex, ((Timestamp) x).getTime());
         }
         else if (x instanceof Long) {
-            batch(parameterIndex, x.toString());
+            batch(parameterIndex, x);
         }
         else if (x instanceof Integer) {
-            batch(parameterIndex, x.toString());
+            batch(parameterIndex, x);
         }
         else if (x instanceof Short) {
-            batch(parameterIndex, new Integer(((Short) x).intValue()).toString());
+            batch(parameterIndex, x);
         }
         else if (x instanceof Float) {
-            batch(parameterIndex, x.toString());
+            batch(parameterIndex, x);
         }
         else if (x instanceof Double) {
-            batch(parameterIndex, x.toString());
+            batch(parameterIndex, x);
         }
         else if (x instanceof Boolean) {
             setBoolean(parameterIndex, ((Boolean) x).booleanValue());
@@ -304,7 +304,7 @@ public class CorePreparedStatement extends CoreStatement implements PreparedStat
        switch(conn.getDatabase().getConfig().dateClass) {
 
            default: //INTEGER:
-               batch(pos, new Long(value / conn.getDatabase().getConfig().dateMultiplier).toString());
+               batch(pos, value / conn.getDatabase().getConfig().dateMultiplier);
        }
    }
 
