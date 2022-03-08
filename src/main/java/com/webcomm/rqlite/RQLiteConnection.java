@@ -147,7 +147,7 @@ public class RQLiteConnection implements Connection {
 
 	@Override
 	public void setReadOnly(boolean readOnly) throws SQLException {
-		System.out.println("readOnly " + readOnly);
+		//System.out.println("readOnly " + readOnly);
 //        throw new SQLException("Cannot change read-only flag after establishing a connection.");
 		
 	}

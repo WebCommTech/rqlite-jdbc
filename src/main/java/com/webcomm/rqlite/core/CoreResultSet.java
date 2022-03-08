@@ -57,7 +57,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
 	public CoreResultSet(CoreStatement stmt, QueryResults results) throws SQLException {
-		System.out.println("results " + gson.toJson(results));
+		//System.out.println("results " + gson.toJson(results));
 		
 		sdf.setTimeZone(TimeZone.getTimeZone("GMT") );
 		
@@ -74,16 +74,16 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 					open = true;
 	
 					cols = this.result.columns;
-					System.out.println("cols " + gson.toJson(cols));
+					//System.out.println("cols " + gson.toJson(cols));
 					colsMeta = this.result.types;
-					System.out.println("colsMeta " + gson.toJson(colsMeta));
+					//System.out.println("colsMeta " + gson.toJson(colsMeta));
 					
 					values = this.result.values;
-					System.out.println("values " + gson.toJson(values));
+					//System.out.println("values " + gson.toJson(values));
 					
 					if(values != null) {
 						maxRows = values.length;
-						System.out.println("maxRows " + maxRows);
+						//System.out.println("maxRows " + maxRows);
 					}
 					
 					error = result.error;
@@ -334,7 +334,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	private boolean isNotNull(Object result, boolean checkBlank) {
 		if(result != null ) {
 
-			System.out.println("result " + gson.toJson(result));
+			//System.out.println("result " + gson.toJson(result));
 			
 			if(gson.toJson(result).equals("{}") ) {
 				return false;
@@ -424,7 +424,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 		        	try {
 		        		return new Date(sdf.parse(result.toString()).getTime());
 					} catch (ParseException e) {
-						System.out.println("cols " + result.toString());
+						//System.out.println("cols " + result.toString());
 					}
 		        }
 
@@ -444,7 +444,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 		        	try {
 		        		return new Time(sdf.parse(result.toString()).getTime());
 					} catch (ParseException e) {
-						System.out.println("cols " + result.toString());
+						//System.out.println("cols " + result.toString());
 					}
 		        }
 
@@ -459,13 +459,13 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 		if(values != null) {
 			Object result = values[row-1][columnIndex];
 			if(isNotNull(result)) {
-				System.out.println("cols " + result.toString());
+				//System.out.println("cols " + result.toString());
 
 		        if (result instanceof String) {
 		        	try {
 		        		return new Timestamp(sdf.parse(result.toString()).getTime());
 					} catch (ParseException e) {
-						System.out.println("cols " + result.toString());
+						//System.out.println("cols " + result.toString());
 					}
 		        }
 
@@ -1139,7 +1139,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 		                cal.setTimeInMillis(sdf.parse(result.toString()).getTime());
 		                return new Date(cal.getTime().getTime());
 					} catch (ParseException e) {
-						System.out.println("cols " + result.toString());
+						//System.out.println("cols " + result.toString());
 					}
 		        }
 
@@ -1166,7 +1166,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 		                cal.setTimeInMillis(sdf.parse(result.toString()).getTime());
 		                return new Time(cal.getTime().getTime());
 					} catch (ParseException e) {
-						System.out.println("cols " + result.toString());
+						//System.out.println("cols " + result.toString());
 					}
 		        }
 
@@ -1193,7 +1193,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 		                cal.setTimeInMillis(sdf.parse(result.toString()).getTime());
 		                return new Timestamp(cal.getTime().getTime());
 					} catch (ParseException e) {
-						System.out.println("cols " + result.toString());
+						//System.out.println("cols " + result.toString());
 					}
 		        }
 		        
