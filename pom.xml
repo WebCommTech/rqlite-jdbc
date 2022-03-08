@@ -3,7 +3,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.webcomm</groupId>
-	<artifactId>rqlite.jdbc</artifactId>
+	<artifactId>com.webcomm.rqlite.jdbc</artifactId>
 	<version>1.0.0</version>
 	<description>RQlite JDBC</description>
 	<name>com.webcomm.rqlite.jdbc</name>
