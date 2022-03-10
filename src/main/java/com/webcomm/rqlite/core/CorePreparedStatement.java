@@ -35,7 +35,7 @@ public class CorePreparedStatement extends CoreStatement implements PreparedStat
 	public CorePreparedStatement(RQLiteConnection c, String sql) {
 		super(c);
 
-		//System.out.println("CorePreparedStatement sql " + gson.toJson(sql));
+		System.out.println("CorePreparedStatement sql " + gson.toJson(sql));
         this.sql = sql;
         setParamCount();
 	}
@@ -49,12 +49,12 @@ public class CorePreparedStatement extends CoreStatement implements PreparedStat
 	        count++;
 	    }
 	    paramCount = count;
-		//System.out.println("setParamCount : " + count);
+		System.out.println("setParamCount : " + count);
 	}
 	
     protected void batch(int pos, Object value) throws SQLException {
-		//System.out.println("pos " + gson.toJson(pos));
-		//System.out.println("value " + gson.toJson(value));
+		System.out.println("pos " + gson.toJson(pos));
+		System.out.println("value " + gson.toJson(value));
         if (batch == null) {
             batch = new Object[paramCount+1];
             batch[0] = sql;
@@ -122,11 +122,11 @@ public class CorePreparedStatement extends CoreStatement implements PreparedStat
 		if(batch != null) {
 			Object[] query = new Object[1];
 			query[0] = batch;
-			//System.out.println("CorePreparedStatement executeQuery :" + gson.toJson(query));
+			System.out.println("CorePreparedStatement executeQuery :" + gson.toJson(query));
 			return executeQuery(query);
 		}
 		else {
-			//System.out.println("CorePreparedStatement executeQuery : " + sql);
+			System.out.println("CorePreparedStatement executeQuery : " + sql);
 			return executeQuery(sql);
 		}
 	}
@@ -136,11 +136,11 @@ public class CorePreparedStatement extends CoreStatement implements PreparedStat
 		if(batch != null) {
 			Object[] query = new Object[1];
 			query[0] = batch;
-			//System.out.println("CorePreparedStatement executeUpdate :" + gson.toJson(query));
+			System.out.println("CorePreparedStatement executeUpdate :" + gson.toJson(query));
 			return executeUpdate(query);
 		}
 		else {
-			//System.out.println("CorePreparedStatement executeUpdate : " + sql);
+			System.out.println("CorePreparedStatement executeUpdate : " + sql);
 			return executeUpdate(sql);
 		}
 	}
@@ -248,7 +248,7 @@ public class CorePreparedStatement extends CoreStatement implements PreparedStat
 
 	@Override
 	public void setObject(int parameterIndex, Object x) throws SQLException {
-		//System.out.println("setObject " + gson.toJson(x));
+		System.out.println("setObject " + gson.toJson(x));
 		
         if (x == null) {
             batch(parameterIndex, null);
@@ -298,8 +298,8 @@ public class CorePreparedStatement extends CoreStatement implements PreparedStat
     * Store the date in the user's preferred format (text, int, or real)
     */
    protected void setDateByMilliseconds(int pos, Long value) throws SQLException {
-		//System.out.println("setDateByMilliseconds " + value);
-		//System.out.println("setDateByMilliseconds " + conn.getDatabase().getConfig().dateMultiplier);
+		System.out.println("setDateByMilliseconds " + value);
+		System.out.println("setDateByMilliseconds " + conn.getDatabase().getConfig().dateMultiplier);
 		
        switch(conn.getDatabase().getConfig().dateClass) {
 

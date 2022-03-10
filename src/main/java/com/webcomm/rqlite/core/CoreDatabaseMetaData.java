@@ -16,7 +16,7 @@ public class CoreDatabaseMetaData implements DatabaseMetaData {
     
     public CoreDatabaseMetaData(RQLiteConnection conn) {
         this.conn = conn;
-		//System.out.println("CoreDatabaseMetaData");
+		System.out.println("CoreDatabaseMetaData");
     }
     
 	@Override
@@ -754,10 +754,10 @@ public class CoreDatabaseMetaData implements DatabaseMetaData {
 	@Override
 	public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types)
 			throws SQLException {
-		//System.out.println("catalog " + gson.toJson(catalog));
-		//System.out.println("schemaPattern " + gson.toJson(schemaPattern));
-		//System.out.println("tableNamePattern " + gson.toJson(tableNamePattern));
-		//System.out.println("types " + gson.toJson(types));
+		System.out.println("catalog " + gson.toJson(catalog));
+		System.out.println("schemaPattern " + gson.toJson(schemaPattern));
+		System.out.println("tableNamePattern " + gson.toJson(tableNamePattern));
+		System.out.println("types " + gson.toJson(types));
 		throw new SQLException("not implement");
 //		return null;
 	}

@@ -26,13 +26,13 @@ public class DB {
         this.url = url;
         this.config = config;
         URL aURL = new URL(url);
-    	//System.out.println(url);
+    	System.out.println(url);
         this.rqlite = RqliteFactory.connect(aURL.getProtocol(), aURL.getHost(), aURL.getPort());
     }
 
     public final synchronized ExecuteResults executeUpdate(String q) throws SQLException, NodeUnavailableException {
 
-		//System.out.println("executeUpdate " + q);
+		System.out.println("executeUpdate " + q);
 		
     	return rqlite.Execute(q);
     }
@@ -40,14 +40,14 @@ public class DB {
     public final synchronized ExecuteResults executeUpdate(Object[] q) throws SQLException, NodeUnavailableException {
 
 		Gson gson = new Gson();
-		//System.out.println("executeUpdate " + gson.toJson(q));
+		System.out.println("executeUpdate " + gson.toJson(q));
 		
     	return rqlite.Execute(q, true);
     }
     
     public final synchronized QueryResults executeQuery(String q) throws SQLException, NodeUnavailableException {
 
-		//System.out.println("executeQuery " + q);
+		System.out.println("executeQuery " + q);
 		
     	return rqlite.Query(q, Rqlite.ReadConsistencyLevel.WEAK);
     }
@@ -55,7 +55,7 @@ public class DB {
     public final synchronized QueryResults executeQuery(Object[] q) throws SQLException, NodeUnavailableException {
 
 		Gson gson = new Gson();
-		//System.out.println("executeQuery " + gson.toJson(q));
+		System.out.println("executeQuery " + gson.toJson(q));
 		
     	return rqlite.Query(q, true, Rqlite.ReadConsistencyLevel.WEAK);
     }
