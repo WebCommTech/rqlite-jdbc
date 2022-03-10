@@ -2,9 +2,13 @@ package com.webcomm.rqlite.core;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.RowIdLifetime;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
+import java.util.regex.Pattern;
 
 import com.google.gson.Gson;
 import com.webcomm.rqlite.RQLiteConnection;
@@ -87,7 +91,7 @@ public class CoreDatabaseMetaData implements DatabaseMetaData {
 
 	@Override
 	public String getDatabaseProductName() throws SQLException {
-//		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName()); TODO
+//		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
 		return "RQlite";
 	}
 
@@ -111,7 +115,7 @@ public class CoreDatabaseMetaData implements DatabaseMetaData {
 
 	@Override
 	public int getDriverMajorVersion() { //TODO
-		return 0;
+		return 1;
 	}
 
 	@Override
@@ -740,7 +744,11 @@ public class CoreDatabaseMetaData implements DatabaseMetaData {
 	@Override
 	public ResultSet getProcedures(String catalog, String schemaPattern, String procedureNamePattern)
 			throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName()); // TODO for Tools
+		PreparedStatement getProcedures = conn.prepareStatement("select null as PROCEDURE_CAT, null as PROCEDURE_SCHEM, " +
+                    "null as PROCEDURE_NAME, null as UNDEF1, null as UNDEF2, null as UNDEF3, " +
+                    "null as REMARKS, null as PROCEDURE_TYPE limit 0;");
+        return getProcedures.executeQuery();
+//		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName()); // TODO for Tools
 //		return null;
 	}
 
@@ -751,15 +759,100 @@ public class CoreDatabaseMetaData implements DatabaseMetaData {
 //		return null;
 	}
 
+    /**
+     * Applies SQL escapes for special characters in a given string.
+     * @param val The string to escape.
+     * @return The SQL escaped string.
+     */
+    protected String escape(final String val) {
+        // TODO: this function is ugly, pass this work off to SQLite, then we
+        //       don't have to worry about Unicode 4, other characters needing
+        //       escaping, etc.
+        int len = val.length();
+        StringBuilder buf = new StringBuilder(len);
+        for (int i = 0; i < len; i++) {
+            if (val.charAt(i) == '\'') {
+                buf.append('\'');
+            }
+            buf.append(val.charAt(i));
+        }
+        return buf.toString();
+    }
+
 	@Override
 	public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types)
 			throws SQLException {
+//		String input = "catalog " + gson.toJson(catalog) + "---"
+//				+ "schemaPattern " + gson.toJson(schemaPattern) + "---"
+//				+ "tableNamePattern " + gson.toJson(tableNamePattern) + "---"
+//				+ "types " + gson.toJson(types) + "---";
 		System.out.println("catalog " + gson.toJson(catalog));
 		System.out.println("schemaPattern " + gson.toJson(schemaPattern));
 		System.out.println("tableNamePattern " + gson.toJson(tableNamePattern));
 		System.out.println("types " + gson.toJson(types));
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName()); // TODO for Tools : Tables, Views, Indexs 
+//		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName() + "---" + input); // TODO for Tools : Tables, Views, Indexs 
 //		return null;
+
+		try {
+
+			tableNamePattern = (tableNamePattern == null || "".equals(tableNamePattern)) ? "%" : escape(tableNamePattern);
+
+	        StringBuilder sql = new StringBuilder();
+	        sql.append("SELECT").append("\n");
+	        sql.append("  NULL AS TABLE_CAT,").append("\n");
+	        sql.append("  NULL AS TABLE_SCHEM,").append("\n");
+	        sql.append("  NAME AS TABLE_NAME,").append("\n");
+	        sql.append("  TYPE AS TABLE_TYPE,").append("\n");
+	        sql.append("  NULL AS REMARKS,").append("\n");
+	        sql.append("  NULL AS TYPE_CAT,").append("\n");
+	        sql.append("  NULL AS TYPE_SCHEM,").append("\n");
+	        sql.append("  NULL AS TYPE_NAME,").append("\n");
+	        sql.append("  NULL AS SELF_REFERENCING_COL_NAME,").append("\n");
+	        sql.append("  NULL AS REF_GENERATION").append("\n");
+	        sql.append("FROM").append("\n");
+	        sql.append("  (").append("\n");
+	        sql.append("    SELECT").append("\n");
+	        sql.append("      NAME,").append("\n");
+	        sql.append("      UPPER(TYPE) AS TYPE").append("\n");
+	        sql.append("    FROM").append("\n");
+	        sql.append("      sqlite_master").append("\n");
+	        sql.append("    WHERE").append("\n");
+	        sql.append("      NAME NOT LIKE 'sqlite_%'").append("\n");
+	        sql.append("      AND UPPER(TYPE) IN ('TABLE', 'VIEW')").append("\n");
+	        sql.append("    UNION ALL").append("\n");
+	        sql.append("    SELECT").append("\n");
+	        sql.append("      NAME,").append("\n");
+	        sql.append("      'GLOBAL TEMPORARY' AS TYPE").append("\n");
+	        sql.append("    FROM").append("\n");
+	        sql.append("      sqlite_temp_master").append("\n");
+	        sql.append("    UNION ALL").append("\n");
+	        sql.append("    SELECT").append("\n");
+	        sql.append("      NAME,").append("\n");
+	        sql.append("      'SYSTEM TABLE' AS TYPE").append("\n");
+	        sql.append("    FROM").append("\n");
+	        sql.append("      sqlite_master").append("\n");
+	        sql.append("    WHERE").append("\n");
+	        sql.append("      NAME LIKE 'sqlite_%'").append("\n");
+	        sql.append("  )").append("\n");
+	        sql.append(" WHERE TABLE_NAME LIKE '").append(tableNamePattern).append("' AND TABLE_TYPE IN (");
+
+	        if (types == null || types.length == 0) {
+	            sql.append("'TABLE','VIEW'");
+	        }
+	        else {
+	            sql.append("'").append(types[0].toUpperCase()).append("'");
+
+	            for (int i = 1; i < types.length; i++) {
+	                sql.append(",'").append(types[i].toUpperCase()).append("'");
+	            }
+	        }
+
+	        sql.append(") ORDER BY TABLE_TYPE, TABLE_NAME;");
+			
+	        return ((CoreStatement)conn.createStatement()).executeQuery(sql.toString());
+		} catch (SQLException e) {
+			throw e;
+		}
 	}
 
 	@Override
@@ -780,10 +873,176 @@ public class CoreDatabaseMetaData implements DatabaseMetaData {
 //		return null;
 	}
 
+    /**
+     * Adds SQL string quotes to the given string.
+     * @param tableName The string to quote.
+     * @return The quoted string.
+     */
+    protected static String quote(String tableName) {
+        if (tableName == null) {
+            return "null";
+        }
+        else {
+            return String.format("'%s'", tableName);
+        }
+    }
+	
+    // Column type patterns
+    protected static final Pattern TYPE_INTEGER = Pattern.compile(".*(INT|BOOL).*");
+    protected static final Pattern TYPE_VARCHAR = Pattern.compile(".*(CHAR|CLOB|TEXT|BLOB).*");
+    protected static final Pattern TYPE_FLOAT = Pattern.compile(".*(REAL|FLOA|DOUB|DEC|NUM).*");
+
 	@Override
 	public ResultSet getColumns(String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern)
 			throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
+
+        StringBuilder sql = new StringBuilder(700);
+        sql.append("select null as TABLE_CAT, null as TABLE_SCHEM, tblname as TABLE_NAME, ")
+           .append("cn as COLUMN_NAME, ct as DATA_TYPE, tn as TYPE_NAME, 2000000000 as COLUMN_SIZE, ")
+           .append("2000000000 as BUFFER_LENGTH, 10   as DECIMAL_DIGITS, 10   as NUM_PREC_RADIX, ")
+           .append("colnullable as NULLABLE, null as REMARKS, colDefault as COLUMN_DEF, ")
+           .append("0    as SQL_DATA_TYPE, 0    as SQL_DATETIME_SUB, 2000000000 as CHAR_OCTET_LENGTH, ")
+           .append("ordpos as ORDINAL_POSITION, (case colnullable when 0 then 'NO' when 1 then 'YES' else '' end)")
+           .append("    as IS_NULLABLE, null as SCOPE_CATLOG, null as SCOPE_SCHEMA, ")
+           .append("null as SCOPE_TABLE, null as SOURCE_DATA_TYPE, ")
+           .append("(case colautoincrement when 0 then 'NO' when 1 then 'YES' else '' end) as IS_AUTOINCREMENT, ")
+           .append("'' as IS_GENERATEDCOLUMN from (");
+
+        boolean colFound = false;
+                      
+        ResultSet rs = null;
+        try {
+            // Get all tables implied by the input
+            final String[] types = new String[] {"TABLE", "VIEW"};
+            rs = getTables(catalog, schemaPattern, tableNamePattern, types);
+            while (rs.next()) {
+                String tableName = rs.getString(3);
+
+                boolean isAutoIncrement = false;  
+                
+                Statement statColAutoinc = conn.createStatement();
+                ResultSet rsColAutoinc = null;
+                try {
+                	statColAutoinc = conn.createStatement();
+                	rsColAutoinc = statColAutoinc.executeQuery("SELECT LIKE('%autoincrement%', LOWER(sql)) FROM sqlite_master "
+                			+ "WHERE LOWER(name) = LOWER('" + escape(tableName) + "') AND TYPE IN ('table', 'view')");
+                	rsColAutoinc.next();
+                	isAutoIncrement = rsColAutoinc.getInt(1) == 1;
+                }  finally {
+                	if (rsColAutoinc != null) {
+                			try {
+                					rsColAutoinc.close();
+                			} catch (Exception e) {
+                					e.printStackTrace();
+                			}
+                	}
+                	if (statColAutoinc != null) {
+                			try {
+                					statColAutoinc.close();
+                			} catch (Exception e) {
+                					e.printStackTrace();
+                			}
+                	}	
+                }
+                
+                Statement colstat = conn.createStatement();
+                ResultSet rscol = null;
+                try {
+                    // For each table, get the column info and build into overall SQL
+                    String pragmaStatement = "PRAGMA table_info('"+ tableName + "')";
+                    rscol = colstat.executeQuery(pragmaStatement);
+
+                    for (int i = 0; rscol.next(); i++) {
+                        String colName = rscol.getString(2);
+                        String colType = rscol.getString(3);
+                        String colNotNull = rscol.getString(4);
+                        String colDefault = rscol.getString(5);
+                        boolean isPk = "1".equals(rscol.getString(6));
+
+                        int colNullable = 2;
+                        if (colNotNull != null) {
+                            colNullable = colNotNull.equals("0") ? 1 : 0;
+                        }
+
+                        if (colFound) {
+                            sql.append(" union all ");
+                        }
+                        colFound = true;
+
+                        /*
+                         * improved column types
+                         * ref http://www.sqlite.org/datatype3.html - 2.1 Determination Of Column Affinity
+                         * plus some degree of artistic-license applied
+                         */
+                        colType = colType == null ? "TEXT" : colType.toUpperCase();
+
+                        int colAutoIncrement = 0;
+                        if(isPk && isAutoIncrement)
+                        {
+                            colAutoIncrement = 1;
+                        }
+                        int colJavaType = -1;
+                        // rule #1 + boolean
+                        if (TYPE_INTEGER.matcher(colType).find()) {
+                            colJavaType = Types.INTEGER;
+                        }
+                        else if (TYPE_VARCHAR.matcher(colType).find()) {
+                            colJavaType = Types.VARCHAR;
+                        }
+                        else if (TYPE_FLOAT.matcher(colType).find()) {
+                            colJavaType = Types.FLOAT;
+                        }
+                        else {
+                            // catch-all
+                            colJavaType = Types.VARCHAR;
+                        }
+
+                        sql.append("select ").append(i + 1).append(" as ordpos, ")
+                           .append(colNullable).append(" as colnullable,")
+                           .append("'").append(colJavaType).append("' as ct, ")
+                           .append("'").append(tableName).append("' as tblname, ")
+                           .append("'").append(escape(colName)).append("' as cn, ")
+                           .append("'").append(escape(colType)).append("' as tn, ")
+                           .append(quote(colDefault == null ? null : escape(colDefault))).append(" as colDefault,")
+                           .append(colAutoIncrement).append(" as colautoincrement");
+
+                        if (columnNamePattern != null) {
+                            sql.append(" where upper(cn) like upper('").append(escape(columnNamePattern)).append("')");
+                        }
+                    }
+                } finally {
+                    if (rscol != null) {
+                        try {
+                            rscol.close();
+                        } catch (SQLException e) {}
+                    }
+                    if (colstat != null) {
+                        try {
+                            colstat.close();
+                        } catch(SQLException e) {}
+                    }
+                }
+            }
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        if (colFound) {
+            sql.append(") order by TABLE_SCHEM, TABLE_NAME, ORDINAL_POSITION;");
+        }
+        else {
+            sql.append("select null as ordpos, null as colnullable, null as ct, null as tblname, null as cn, null as tn, null as colDefault, null as colautoincrement) limit 0;");
+        }
+
+        Statement stat = conn.createStatement();
+        return ((CoreStatement)stat).executeQuery(sql.toString());
+//		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
 //		return null;
 	}
 

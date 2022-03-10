@@ -38,8 +38,8 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	protected final CoreStatement stmt;
 	protected final RQLiteConnection conn;
 	
-	protected final QueryResults results;
-	protected final QueryResults.Result result;
+	protected QueryResults results;
+	protected QueryResults.Result result;
 
 	public boolean open = false; // true means have results and can iterate them
 	protected int row = 0; // number of current row, starts at 1 (0 is for before loading data)
@@ -55,6 +55,12 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	Gson gson = new Gson();
 
 	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+
+	public CoreResultSet(CoreStatement stmt) throws SQLException {
+		this.stmt = stmt;
+		this.conn = (RQLiteConnection) stmt.getConnection();
+		
+	}
 
 	public CoreResultSet(CoreStatement stmt, QueryResults results) throws SQLException {
 		System.out.println("results " + gson.toJson(results));

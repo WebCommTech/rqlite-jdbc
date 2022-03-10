@@ -19,10 +19,17 @@ public class CoreStatement implements Statement, Codes {
     public final RQLiteConnection conn;
     protected String     sql            = null;
     protected Object[]   batch          = null;
+    protected CoreResultSet   rs;
 
     public CoreStatement(RQLiteConnection c) {
         conn = c;
 		System.out.println("CoreStatement");
+        try {
+			rs = new CoreResultSet(this);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
 	@Override
