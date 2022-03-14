@@ -43,12 +43,13 @@
 			<scope>provided</scope>
 			<version>1.16.20</version>
 		</dependency>
- 		
+ 		<!-- 
 		<dependency>
 		    <groupId>org.xerial</groupId>
 		    <artifactId>sqlite-jdbc</artifactId>
 			<version>3.28.0</version>
 		</dependency>
+		 -->
 
 	</dependencies>
 

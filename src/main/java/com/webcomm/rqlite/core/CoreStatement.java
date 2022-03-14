@@ -31,6 +31,10 @@ public class CoreStatement implements Statement, Codes {
 			e.printStackTrace();
 		}
     }
+    
+    public void setResultSet(CoreResultSet rs) {
+    	this.rs = rs;
+    }
 
 	@Override
 	public <T> T unwrap(Class<T> iface) throws SQLException {
@@ -146,17 +150,20 @@ public class CoreStatement implements Statement, Codes {
 		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
 		
 	}
+	
+	private int max = 0;
 
 	@Override
 	public int getMaxRows() throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-//		return 0;
+//		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
+		return max;
 	}
 
 	@Override
 	public void setMaxRows(int max) throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-		
+//		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
+		System.out.println("CoreStatement setMaxRows : " + max);
+		this.max = max; 
 	}
 
 	@Override
@@ -215,8 +222,8 @@ public class CoreStatement implements Statement, Codes {
 
 	@Override
 	public ResultSet getResultSet() throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-//		return null;
+//		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
+		return rs;
 	}
 
 	@Override

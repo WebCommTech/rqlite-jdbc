@@ -39,10 +39,10 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	protected final RQLiteConnection conn;
 	
 	protected QueryResults results;
-	protected QueryResults.Result result;
+	protected QueryResults.Result queryResultsResult;
 
 	public boolean open = false; // true means have results and can iterate them
-	protected int row = 0; // number of current row, starts at 1 (0 is for before loading data)
+	protected int row = -1; // number of current row, starts at 1 (0 is for before loading data)
 	protected int lastCol; // last column accessed, for wasNull(). -1 if none
 	public int maxRows; // max. number of rows as set by a Statement
 	public String[] colsMeta = null;
@@ -70,21 +70,24 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 		this.stmt = stmt;
 		this.conn = (RQLiteConnection) stmt.getConnection();
 		this.results = results;
+		
+		stmt.setResultSet(this);
+		
 		if(results != null) {
 
 			QueryResults.Result[] resultArray = results.results;
 			if (resultArray.length > 0) {
-				this.result = resultArray[0];
+				this.queryResultsResult = resultArray[0];
 				
-				if(result != null) {
+				if(queryResultsResult != null) {
 					open = true;
 	
-					cols = this.result.columns;
+					cols = this.queryResultsResult.columns;
 					System.out.println("cols " + gson.toJson(cols));
-					colsMeta = this.result.types;
+					colsMeta = this.queryResultsResult.types;
 					System.out.println("colsMeta " + gson.toJson(colsMeta));
 					
-					values = this.result.values;
+					values = this.queryResultsResult.values;
 					System.out.println("values " + gson.toJson(values));
 					
 					if(values != null) {
@@ -92,18 +95,18 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 						System.out.println("maxRows " + maxRows);
 					}
 					
-					error = result.error;
+					error = queryResultsResult.error;
 					
 					if(StringUtils.isNotBlank(error)) {
 						throw new SQLException(error);
 					}
 				}
 			} else {
-				this.result = null;
+				this.queryResultsResult = null;
 			}
 		}
 		else {
-			this.result = null;
+			this.queryResultsResult = null;
 		}
 	}
 
@@ -169,14 +172,38 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 
 	@Override
 	public String getColumnLabel(int column) throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-//		return null;
+//		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
+		if(cols != null) {
+			column = checkCol(column);
+			
+			System.out.println("getColumnLabel column : " + column + "---" + colsMeta[column]);
+			return cols[column];	
+		}
+		
+		return null;
 	}
+	
+    public int checkCol(int col) throws SQLException {
+        if (colsMeta == null) {
+            throw new IllegalStateException("SQLite JDBC: inconsistent internal state");
+        }
+        if (col < 1 || col > colsMeta.length) {
+            throw new SQLException("column " + col + " out of bounds [1," + colsMeta.length + "]");
+        }
+        return --col;
+    }
 
 	@Override
 	public String getColumnName(int column) throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-//		return null;
+//		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
+		if(cols != null) {
+			column = checkCol(column);
+			
+			System.out.println("getColumnName column : " + column + "---" + cols[column]);
+			return cols[column];	
+		}
+		
+		return null;
 	}
 
 	@Override
@@ -223,14 +250,16 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 
 	@Override
 	public boolean isReadOnly(int column) throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-//		return false;
+//		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
+		System.out.println(new Object(){}.getClass().getEnclosingMethod().getName() + " column : " + column);
+		return false;
 	}
 
 	@Override
 	public boolean isWritable(int column) throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-//		return false;
+//		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
+		System.out.println(new Object(){}.getClass().getEnclosingMethod().getName() + " column : " + column);
+		return true;
 	}
 
 	@Override
@@ -256,13 +285,13 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 			lastCol = -1;
 	
 			// first row is loaded by execute(), so do not step() again
-			if (row == 0) {
+			if (row == -1) {
 				row++;
 				return true;
 			}
 	
 			// check if we are row limited by the statement or the ResultSet
-			if (maxRows != 0 && row == maxRows) {
+			if (maxRows != 0 && row == maxRows-1) {
 				return false;
 			}
 	
@@ -277,8 +306,8 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 
 	@Override
 	public void close() throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-
+//		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
+		// TODO
 	}
 
 	@Override
@@ -294,7 +323,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	@Override
 	public String getString(int columnIndex) throws SQLException {
 		if(values != null) {
-			Object result = values[row-1][columnIndex];
+			Object result = values[row][checkCol(columnIndex)];
 			if(isNotNull(result, false)) {
 	
 				return result.toString();	
@@ -306,7 +335,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	@Override
 	public boolean getBoolean(int columnIndex) throws SQLException {
 		if(values != null) {
-			Object result = values[row-1][columnIndex];
+			Object result = values[row][checkCol(columnIndex)];
 			if(isNotNull(result)) {
 	
 				return Boolean.parseBoolean(result.toString());
@@ -324,7 +353,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	@Override
 	public short getShort(int columnIndex) throws SQLException {
 		if(values != null) {
-			Object result = values[row-1][columnIndex];
+			Object result = values[row][checkCol(columnIndex)];
 			if(isNotNull(result)) {
 	
 				return Short.parseShort(result.toString());
@@ -340,7 +369,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	private boolean isNotNull(Object result, boolean checkBlank) {
 		if(result != null ) {
 
-			System.out.println("result " + gson.toJson(result));
+			System.out.println("isNotNull result " + gson.toJson(result));
 			
 			if(gson.toJson(result).equals("{}") ) {
 				return false;
@@ -358,9 +387,9 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	@Override
 	public int getInt(int columnIndex) throws SQLException {
 		if(values != null) {
-			Object result = values[row-1][columnIndex];
+			Object result = values[row][checkCol(columnIndex)];
 			if(isNotNull(result)) {
-				return Integer.parseInt(gson.toJson(result));
+				return Integer.parseInt(result.toString());
 			}
 		}
 		return 0;
@@ -369,9 +398,8 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	@Override
 	public long getLong(int columnIndex) throws SQLException {
 		if(values != null) {
-			Object result = values[row-1][columnIndex];
+			Object result = values[row][checkCol(columnIndex)];
 			if(isNotNull(result)) {
-	
 				return Long.parseLong(result.toString());
 			}
 		}
@@ -381,7 +409,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	@Override
 	public float getFloat(int columnIndex) throws SQLException {
 		if(values != null) {
-			Object result = values[row-1][columnIndex];
+			Object result = values[row][checkCol(columnIndex)];
 			if(isNotNull(result)) {
 	
 				return Float.parseFloat(result.toString());
@@ -393,7 +421,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	@Override
 	public double getDouble(int columnIndex) throws SQLException {
 		if(values != null) {
-			Object result = values[row-1][columnIndex];
+			Object result = values[row][checkCol(columnIndex)];
 			if(isNotNull(result)) {
 	
 				return Double.parseDouble(result.toString());
@@ -405,7 +433,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	@Override
 	public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
 		if(values != null) {
-			Object result = values[row-1][columnIndex];
+			Object result = values[row][checkCol(columnIndex)];
 			if(isNotNull(result)) {
 	
 				return new BigDecimal(result.toString()).setScale(scale);
@@ -423,7 +451,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	@Override
 	public Date getDate(int columnIndex) throws SQLException {
 		if(values != null) {
-			Object result = values[row-1][columnIndex];
+			Object result = values[row][checkCol(columnIndex)];
 			if(isNotNull(result)) {
 
 		        if (result instanceof String) {
@@ -443,7 +471,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	@Override
 	public Time getTime(int columnIndex) throws SQLException {
 		if(values != null) {
-			Object result = values[row-1][columnIndex];
+			Object result = values[row][checkCol(columnIndex)];
 			if(isNotNull(result)) {
 
 		        if (result instanceof String) {
@@ -463,7 +491,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	@Override
 	public Timestamp getTimestamp(int columnIndex) throws SQLException {
 		if(values != null) {
-			Object result = values[row-1][columnIndex];
+			Object result = values[row][checkCol(columnIndex)];
 			if(isNotNull(result)) {
 				System.out.println("cols " + result.toString());
 
@@ -599,15 +627,15 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 
 	@Override
 	public ResultSetMetaData getMetaData() throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-//		return null;
+//		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
+		return this;
 	}
 
 	@Override
 	public Object getObject(int columnIndex) throws SQLException {
-		if(values != null) {
-			Object result = values[row-1][columnIndex];
-			if(result != null) {
+		if(values != null) {			
+			Object result = values[row][checkCol(columnIndex)];
+			if(isNotNull(result)) {
 	
 				return result;
 			}
@@ -631,6 +659,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	public int findColumn(String columnLabel) throws SQLException {
         Integer index = findColumnIndexInCache(columnLabel);
         if (index != null) {
+        	System.out.println("findColumn columnLabel : " + columnLabel + " index : " + index);
             return index;
         }
         for (int i=0; i < cols.length; i++) {
@@ -645,6 +674,9 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
         if (columnNameToIndex == null) {
             columnNameToIndex = new HashMap<String, Integer>(cols.length);
         }
+        index++; // Change index start from 1
+        
+    	System.out.println("addColumnIndexInCache findColumn columnLabel : " + col + " index : " + index);
         columnNameToIndex.put(col, index);
         return index;
     }
@@ -1137,7 +1169,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	@Override
 	public Date getDate(int columnIndex, Calendar cal) throws SQLException {
 		if(values != null) {
-			Object result = values[row-1][columnIndex];
+			Object result = values[row][checkCol(columnIndex)];
 			if(isNotNull(result)) {
 
 		        if (result instanceof String) {
@@ -1164,7 +1196,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	@Override
 	public Time getTime(int columnIndex, Calendar cal) throws SQLException {
 		if(values != null) {
-			Object result = values[row-1][columnIndex];
+			Object result = values[row][checkCol(columnIndex)];
 			if(isNotNull(result)) {
 
 		        if (result instanceof String) {
@@ -1191,7 +1223,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	@Override
 	public Timestamp getTimestamp(int columnIndex, Calendar cal) throws SQLException {
 		if(values != null) {
-			Object result = values[row-1][columnIndex];
+			Object result = values[row][checkCol(columnIndex)];
 			if(isNotNull(result)) {
 
 		        if (result instanceof String) {
@@ -1218,7 +1250,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	@Override
 	public URL getURL(int columnIndex) throws SQLException {
 		if(values != null) {
-			Object result = values[row-1][columnIndex];
+			Object result = values[row][checkCol(columnIndex)];
 			if(isNotNull(result)) {
 	
 				try {
@@ -1575,7 +1607,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	@Override
 	public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
 		if(values != null) {
-			Object result = values[row-1][columnIndex];
+			Object result = values[row][checkCol(columnIndex)];
 			if(isNotNull(result)) {
 	
 				return gson.fromJson(result.toString(), type);
