@@ -354,7 +354,9 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 		if(values != null) {
 			Object result = values[row-1][columnIndex];
 			if(isNotNull(result)) {
-				return Integer.parseInt(gson.toJson(result));
+				
+				
+				return Integer.parseInt(result.toString());
 			}
 		}
 		return 0;
