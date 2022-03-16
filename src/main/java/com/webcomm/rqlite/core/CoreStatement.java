@@ -210,13 +210,24 @@ public class CoreStatement implements Statement, Codes {
 	@Override
 	public boolean execute(String sql) throws SQLException {
 		System.out.println("execute sql : " + sql);
-		
-		ResultSet result = executeQuery(sql);
-		if(result != null) {
-			return true;
-		}
-		else {
-			return false;
+		if (StringUtils.startsWithIgnoreCase(sql, "INSERT") || StringUtils.startsWithIgnoreCase(sql, "UPDATE")
+				|| StringUtils.startsWithIgnoreCase(sql, "DELETE") || StringUtils.startsWithIgnoreCase(sql, "DROP")
+				|| StringUtils.startsWithIgnoreCase(sql, "CREATE") || StringUtils.startsWithIgnoreCase(sql, "ALTER")
+				|| StringUtils.startsWithIgnoreCase(sql, "TRUNCATE")) {
+
+			int result = executeUpdate(sql);
+			if (result == SQLITE_OK) {
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			ResultSet result = executeQuery(sql);
+			if (result != null) {
+				return true;
+			} else {
+				return false;
+			}
 		}
 	}
 
