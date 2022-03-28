@@ -19,6 +19,9 @@ import com.google.gson.Gson;
 import com.webcomm.rqlite.RQLiteConnection;
 import com.webcomm.rqlite.util.StringUtils;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class CoreDatabaseMetaData implements DatabaseMetaData {
 
 	Gson gson = new Gson();
@@ -26,7 +29,7 @@ public class CoreDatabaseMetaData implements DatabaseMetaData {
     
     public CoreDatabaseMetaData(RQLiteConnection conn) {
         this.conn = conn;
-		// System.out.println("CoreDatabaseMetaData");
+		log.debug("CoreDatabaseMetaData");
     }
     
 	@Override
@@ -68,7 +71,7 @@ public class CoreDatabaseMetaData implements DatabaseMetaData {
 	@Override
 	public boolean isReadOnly() throws SQLException {
 //		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-		// System.out.println(new Object(){}.getClass().getEnclosingMethod().getName());
+		log.debug(new Object(){}.getClass().getEnclosingMethod().getName());
 		return false;
 	}
 
@@ -787,10 +790,10 @@ public class CoreDatabaseMetaData implements DatabaseMetaData {
 	@Override
 	public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types)
 			throws SQLException {
-		// System.out.println("catalog " + gson.toJson(catalog));
-		// System.out.println("schemaPattern " + gson.toJson(schemaPattern));
-		// System.out.println("tableNamePattern " + gson.toJson(tableNamePattern));
-		// System.out.println("types " + gson.toJson(types));
+		log.debug("catalog " + gson.toJson(catalog));
+		log.debug("schemaPattern " + gson.toJson(schemaPattern));
+		log.debug("tableNamePattern " + gson.toJson(tableNamePattern));
+		log.debug("types " + gson.toJson(types));
 
 		try {
 
@@ -905,10 +908,10 @@ public class CoreDatabaseMetaData implements DatabaseMetaData {
 	public ResultSet getColumns(String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern)
 			throws SQLException {
 
-		// System.out.println("catalog " + gson.toJson(catalog));
-		// System.out.println("schemaPattern " + gson.toJson(schemaPattern));
-		// System.out.println("tableNamePattern " + gson.toJson(tableNamePattern));
-		// System.out.println("columnNamePattern " + gson.toJson(columnNamePattern));
+		log.debug("catalog " + gson.toJson(catalog));
+		log.debug("schemaPattern " + gson.toJson(schemaPattern));
+		log.debug("tableNamePattern " + gson.toJson(tableNamePattern));
+		log.debug("columnNamePattern " + gson.toJson(columnNamePattern));
 		
         StringBuilder sql = new StringBuilder(700);
         sql.append("select null as TABLE_CAT, null as TABLE_SCHEM, tblname as TABLE_NAME, ")

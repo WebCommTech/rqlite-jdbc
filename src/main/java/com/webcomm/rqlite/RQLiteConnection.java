@@ -26,6 +26,9 @@ import com.webcomm.rqlite.core.CorePreparedStatement;
 import com.webcomm.rqlite.core.CoreStatement;
 import com.webcomm.rqlite.core.DB;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class RQLiteConnection implements Connection {
 
     private final DB db;
@@ -147,7 +150,7 @@ public class RQLiteConnection implements Connection {
 
 	@Override
 	public void setReadOnly(boolean readOnly) throws SQLException {
-		// System.out.println("readOnly " + readOnly);
+		log.debug("readOnly " + readOnly);
 //        throw new SQLException("Cannot change read-only flag after establishing a connection.");
 		
 	}

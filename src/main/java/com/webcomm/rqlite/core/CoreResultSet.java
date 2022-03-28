@@ -33,6 +33,9 @@ import com.google.gson.Gson;
 import com.rqlite.dto.QueryResults;
 import com.webcomm.rqlite.RQLiteConnection;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class CoreResultSet implements ResultSet, ResultSetMetaData {
 
 	protected final CoreStatement stmt;
@@ -63,7 +66,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	}
 
 	public CoreResultSet(CoreStatement stmt, QueryResults results) throws SQLException {
-		// System.out.println("results " + gson.toJson(results));
+		log.debug("results " + gson.toJson(results));
 		
 		sdf.setTimeZone(TimeZone.getTimeZone("GMT") );
 		
@@ -83,16 +86,16 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 					open = true;
 	
 					cols = this.queryResultsResult.columns;
-					// System.out.println("cols " + gson.toJson(cols));
+					log.debug("cols " + gson.toJson(cols));
 					colsMeta = this.queryResultsResult.types;
-					// System.out.println("colsMeta " + gson.toJson(colsMeta));
+					log.debug("colsMeta " + gson.toJson(colsMeta));
 					
 					values = this.queryResultsResult.values;
-					// System.out.println("values " + gson.toJson(values));
+					log.debug("values " + gson.toJson(values));
 					
 					if(values != null) {
 						maxRows = values.length;
-						// System.out.println("maxRows " + maxRows);
+						log.debug("maxRows " + maxRows);
 					}
 					
 					error = queryResultsResult.error;
@@ -176,7 +179,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 		if(cols != null) {
 			column = checkCol(column);
 			
-			// System.out.println("getColumnLabel column : " + column + "---" + colsMeta[column]);
+			log.debug("getColumnLabel column : " + column + "---" + colsMeta[column]);
 			return cols[column];	
 		}
 		
@@ -199,7 +202,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 		if(cols != null) {
 			column = checkCol(column);
 			
-			// System.out.println("getColumnName column : " + column + "---" + cols[column]);
+			log.debug("getColumnName column : " + column + "---" + cols[column]);
 			return cols[column];	
 		}
 		
@@ -251,14 +254,14 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	@Override
 	public boolean isReadOnly(int column) throws SQLException {
 //		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-		// System.out.println(new Object(){}.getClass().getEnclosingMethod().getName() + " column : " + column);
+		log.debug(new Object(){}.getClass().getEnclosingMethod().getName() + " column : " + column);
 		return false;
 	}
 
 	@Override
 	public boolean isWritable(int column) throws SQLException {
 //		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-		// System.out.println(new Object(){}.getClass().getEnclosingMethod().getName() + " column : " + column);
+		log.debug(new Object(){}.getClass().getEnclosingMethod().getName() + " column : " + column);
 		return true;
 	}
 
@@ -369,7 +372,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	private boolean isNotNull(Object result, boolean checkBlank) {
 		if(result != null ) {
 
-			// System.out.println("isNotNull result " + gson.toJson(result));
+			log.debug("isNotNull result " + gson.toJson(result));
 			
 			if(gson.toJson(result).equals("{}") ) {
 				return false;
@@ -458,7 +461,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 		        	try {
 		        		return new Date(sdf.parse(result.toString()).getTime());
 					} catch (ParseException e) {
-						// System.out.println("cols " + result.toString());
+						log.debug("cols " + result.toString());
 					}
 		        }
 
@@ -478,7 +481,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 		        	try {
 		        		return new Time(sdf.parse(result.toString()).getTime());
 					} catch (ParseException e) {
-						// System.out.println("cols " + result.toString());
+						log.debug("cols " + result.toString());
 					}
 		        }
 
@@ -493,13 +496,13 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 		if(values != null) {
 			Object result = values[row][checkCol(columnIndex)];
 			if(isNotNull(result)) {
-				// System.out.println("cols " + result.toString());
+				log.debug("cols " + result.toString());
 
 		        if (result instanceof String) {
 		        	try {
 		        		return new Timestamp(sdf.parse(result.toString()).getTime());
 					} catch (ParseException e) {
-						// System.out.println("cols " + result.toString());
+						log.debug("cols " + result.toString());
 					}
 		        }
 
@@ -659,7 +662,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 	public int findColumn(String columnLabel) throws SQLException {
         Integer index = findColumnIndexInCache(columnLabel);
         if (index != null) {
-        	// System.out.println("findColumn columnLabel : " + columnLabel + " index : " + index);
+        	log.debug("findColumn columnLabel : " + columnLabel + " index : " + index);
             return index;
         }
         for (int i=0; i < cols.length; i++) {
@@ -676,7 +679,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
         }
         index++; // Change index start from 1
         
-    	// System.out.println("addColumnIndexInCache findColumn columnLabel : " + col + " index : " + index);
+    	log.debug("addColumnIndexInCache findColumn columnLabel : " + col + " index : " + index);
         columnNameToIndex.put(col, index);
         return index;
     }
@@ -1177,7 +1180,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 		                cal.setTimeInMillis(sdf.parse(result.toString()).getTime());
 		                return new Date(cal.getTime().getTime());
 					} catch (ParseException e) {
-						// System.out.println("cols " + result.toString());
+						log.debug("cols " + result.toString());
 					}
 		        }
 
@@ -1204,7 +1207,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 		                cal.setTimeInMillis(sdf.parse(result.toString()).getTime());
 		                return new Time(cal.getTime().getTime());
 					} catch (ParseException e) {
-						// System.out.println("cols " + result.toString());
+						log.debug("cols " + result.toString());
 					}
 		        }
 
@@ -1231,7 +1234,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 		                cal.setTimeInMillis(sdf.parse(result.toString()).getTime());
 		                return new Timestamp(cal.getTime().getTime());
 					} catch (ParseException e) {
-						// System.out.println("cols " + result.toString());
+						log.debug("cols " + result.toString());
 					}
 		        }
 		        

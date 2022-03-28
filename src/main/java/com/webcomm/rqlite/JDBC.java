@@ -9,13 +9,16 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
 import java.util.logging.Logger;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class JDBC implements Driver
 {
     public static final String PREFIX = "jdbc:rqlite:"; // jdbc:rqlite:http://localhost:4001
 
     static {
         try {
-        	// System.out.println("DriverManager.registerDriver(new JDBC());");
+        	log.debug("DriverManager.registerDriver(new JDBC());");
             DriverManager.registerDriver(new JDBC());
         }
         catch (SQLException e) {
