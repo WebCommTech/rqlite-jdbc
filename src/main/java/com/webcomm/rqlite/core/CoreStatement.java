@@ -23,7 +23,7 @@ public class CoreStatement implements Statement, Codes {
 
     public CoreStatement(RQLiteConnection c) {
         conn = c;
-		System.out.println("CoreStatement");
+		// System.out.println("CoreStatement");
         try {
 			rs = new CoreResultSet(this);
 		} catch (SQLException e) {
@@ -51,7 +51,7 @@ public class CoreStatement implements Statement, Codes {
 	@Override
 	public ResultSet executeQuery(String sql) throws SQLException {
 		try {
-			System.out.println("CoreStatement executeQuery sql : " + sql);
+			// System.out.println("CoreStatement executeQuery sql : " + sql);
 			
 			QueryResults results = conn.getDatabase().executeQuery(sql);
 			
@@ -68,7 +68,7 @@ public class CoreStatement implements Statement, Codes {
 	public ResultSet executeQuery(Object[] sql) throws SQLException {
 		try {
 			Gson gson = new Gson();
-			System.out.println("CoreStatement executeQuery :" + gson.toJson(sql));
+			// System.out.println("CoreStatement executeQuery :" + gson.toJson(sql));
 			
 			QueryResults results = conn.getDatabase().executeQuery(sql);
 			
@@ -85,7 +85,7 @@ public class CoreStatement implements Statement, Codes {
 	@Override
 	public int executeUpdate(String sql) throws SQLException {
 		try {
-			System.out.println("CoreStatement executeUpdate sql : " + sql);
+			// System.out.println("CoreStatement executeUpdate sql : " + sql);
 			
 			ExecuteResults results = conn.getDatabase().executeUpdate(sql);
 
@@ -100,7 +100,7 @@ public class CoreStatement implements Statement, Codes {
 	public int executeUpdate(Object[] sql) throws SQLException {
 		try {
 			Gson gson = new Gson();
-			System.out.println("CoreStatement executeUpdate :" + gson.toJson(sql));
+			// System.out.println("CoreStatement executeUpdate :" + gson.toJson(sql));
 			
 			ExecuteResults results = conn.getDatabase().executeUpdate(sql);
 
@@ -115,7 +115,7 @@ public class CoreStatement implements Statement, Codes {
 	private int checkResult(ExecuteResults results) throws SQLException {
 
 		Gson gson = new Gson();
-		System.out.println("CoreStatement checkResult ExecuteResults " + gson.toJson(results));
+		// System.out.println("CoreStatement checkResult ExecuteResults " + gson.toJson(results));
 		
 		ExecuteResults.Result[] resultArray = results.results;
 		if (resultArray.length > 0) {
@@ -162,7 +162,7 @@ public class CoreStatement implements Statement, Codes {
 	@Override
 	public void setMaxRows(int max) throws SQLException {
 //		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-		System.out.println("CoreStatement setMaxRows : " + max);
+		// System.out.println("CoreStatement setMaxRows : " + max);
 		this.max = max; 
 	}
 
@@ -209,7 +209,7 @@ public class CoreStatement implements Statement, Codes {
 
 	@Override
 	public boolean execute(String sql) throws SQLException {
-		System.out.println("execute sql : " + sql);
+		// System.out.println("execute sql : " + sql);
 		if (StringUtils.startsWithIgnoreCase(sql, "INSERT") || StringUtils.startsWithIgnoreCase(sql, "UPDATE")
 				|| StringUtils.startsWithIgnoreCase(sql, "DELETE") || StringUtils.startsWithIgnoreCase(sql, "DROP")
 				|| StringUtils.startsWithIgnoreCase(sql, "CREATE") || StringUtils.startsWithIgnoreCase(sql, "ALTER")
@@ -302,12 +302,12 @@ public class CoreStatement implements Statement, Codes {
 			Gson gson = new Gson();
 			Object[] query = new Object[1];
 			query[0] = batch;
-			System.out.println("CoreStatement executeBatch :" + gson.toJson(query));
+			// System.out.println("CoreStatement executeBatch :" + gson.toJson(query));
 			
 			return new int[] {executeUpdate(query)};
 		}
 		else {
-			System.out.println("CoreStatement executeBatch : " + sql);
+			// System.out.println("CoreStatement executeBatch : " + sql);
 			executeUpdate(sql);
 			return new int[] {executeUpdate(sql)};
 		}

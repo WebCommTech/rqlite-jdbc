@@ -15,7 +15,7 @@ public class JDBC implements Driver
 
     static {
         try {
-        	System.out.println("DriverManager.registerDriver(new JDBC());");
+        	// System.out.println("DriverManager.registerDriver(new JDBC());");
             DriverManager.registerDriver(new JDBC());
         }
         catch (SQLException e) {
