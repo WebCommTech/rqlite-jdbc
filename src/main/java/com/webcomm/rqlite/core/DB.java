@@ -11,7 +11,6 @@ import com.rqlite.RqliteFactory;
 import com.rqlite.dto.ExecuteResults;
 import com.rqlite.dto.QueryResults;
 import com.webcomm.rqlite.RQLiteConfig;
-import com.webcomm.rqlite.RQLiteConnection;
 
 import lombok.extern.slf4j.Slf4j;
 
