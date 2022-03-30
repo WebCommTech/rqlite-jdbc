@@ -10,13 +10,16 @@ import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.gson.Gson;
 import com.webcomm.rqlite.RQLiteConnection;
+import com.webcomm.rqlite.core.CoreDatabaseMetaData.ImportedKeyFinder.ForeignKey;
 import com.webcomm.rqlite.util.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -1091,10 +1094,36 @@ public class CoreDatabaseMetaData implements DatabaseMetaData {
 	}
 
 	@Override
-	public ResultSet getPrimaryKeys(String catalog, String schema, String table) throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-//		return null;
-	}
+    public ResultSet getPrimaryKeys(String c, String s, String table) throws SQLException {
+        PrimaryKeyFinder pkFinder = new PrimaryKeyFinder(table);
+        String[] columns = pkFinder.getColumns();
+
+        Statement stat = conn.createStatement();
+        StringBuilder sql = new StringBuilder(512);
+        sql.append("select null as TABLE_CAT, null as TABLE_SCHEM, '")
+           .append(escape(table))
+           .append("' as TABLE_NAME, cn as COLUMN_NAME, ks as KEY_SEQ, pk as PK_NAME from (");
+
+        if (columns == null) {
+            sql.append("select null as cn, null as pk, 0 as ks) limit 0;");
+
+            return ((CoreStatement)stat).executeQuery(sql.toString());
+        }
+
+        String pkName = pkFinder.getName();
+        if (pkName != null) {
+        	pkName = "'" + pkName + "'";
+        }
+
+        for (int i = 0; i < columns.length; i++) {
+            if (i > 0) sql.append(" union ");
+            sql.append("select ").append(pkName).append(" as pk, '")
+               .append(escape(unquoteIdentifier(columns[i]))).append("' as cn, ")
+               .append(i+1).append(" as ks");
+        }
+
+        return ((CoreStatement)stat).executeQuery(sql.append(") order by cn;").toString());
+    }
 
     private StringBuilder appendDummyForeignKeyList(StringBuilder sql) {
       sql.append("select -1 as ks, '' as ptn, '' as fcn, '' as pcn, ")
@@ -1483,11 +1512,137 @@ public class CoreDatabaseMetaData implements DatabaseMetaData {
         return ((CoreStatement)stat).executeQuery(sql.toString());
 	}
 
+    private final static Map<String, Integer> RULE_MAP = new HashMap<String, Integer>();
+
+    static {
+        RULE_MAP.put("NO ACTION", DatabaseMetaData.importedKeyNoAction);
+        RULE_MAP.put("CASCADE", DatabaseMetaData.importedKeyCascade);
+        RULE_MAP.put("RESTRICT", DatabaseMetaData.importedKeyRestrict);
+        RULE_MAP.put("SET NULL", DatabaseMetaData.importedKeySetNull);
+        RULE_MAP.put("SET DEFAULT", DatabaseMetaData.importedKeySetDefault);
+    }
+
 	@Override
-	public ResultSet getExportedKeys(String catalog, String schema, String table) throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-//		return null;
-	}
+    public ResultSet getExportedKeys(String catalog, String schema, String table) throws SQLException {
+        PrimaryKeyFinder pkFinder = new PrimaryKeyFinder(table);
+        String[] pkColumns = pkFinder.getColumns();
+        Statement stat = conn.createStatement();
+
+        catalog = (catalog != null) ? quote(catalog) : null;
+        schema = (schema != null) ? quote(schema) : null;
+
+        StringBuilder exportedKeysQuery = new StringBuilder(512);
+
+        String target = null;
+        int count = 0;
+        if (pkColumns != null) {
+            // retrieve table list
+            ResultSet rs = stat.executeQuery("select name from sqlite_master where type = 'table'");
+            ArrayList<String> tableList = new ArrayList<String>();
+
+            while (rs.next()) {
+            	String tblname = rs.getString(1);
+                tableList.add(tblname);
+                if (tblname.equalsIgnoreCase(table)) {
+                	// get the correct case as in the database
+                	// (not uppercase nor lowercase)
+                	target = tblname;
+                }
+            }
+
+            rs.close();
+
+            // find imported keys for each table
+            for (String tbl : tableList) {
+                try {
+                	final ImportedKeyFinder impFkFinder = new ImportedKeyFinder(tbl);
+                	List<ForeignKey> fkNames = impFkFinder.getFkList();  
+                	
+                	for (Iterator iterator = fkNames.iterator(); iterator.hasNext();) {
+						ForeignKey foreignKey = (ForeignKey) iterator.next();
+						
+                        String PKTabName = foreignKey.getPkTableName();
+
+                        if (PKTabName == null || !PKTabName.equalsIgnoreCase(target)) {
+                            continue;
+                        }
+                        
+                        for (int j = 0; j < foreignKey.getColumnMappingCount(); j++) {
+	                        int keySeq = j + 1;
+	                        String[] columnMapping = foreignKey.getColumnMapping(j);
+	                        String PKColName = columnMapping[1];
+	                        PKColName = (PKColName == null) ? "" : PKColName;
+	                        String FKColName = columnMapping[0];
+	                        FKColName = (FKColName == null) ? "" : FKColName;
+	                        
+	                        boolean usePkName = false;
+	                        for (int k = 0; k < pkColumns.length; k++) {
+								if (pkColumns[k] != null && pkColumns[k].equalsIgnoreCase(PKColName)) {
+									usePkName = true;
+									break;
+								}
+							}
+	                        String pkName = (usePkName && pkFinder.getName() != null)? pkFinder.getName(): "";
+	                        	
+	                        exportedKeysQuery
+	                            .append(count > 0 ? " union all select " : "select ")
+	                            .append(Integer.toString(keySeq)).append(" as ks, '")
+	                            .append(escape(tbl)).append("' as fkt, '")
+	                            .append(escape(FKColName)).append("' as fcn, '")
+	                            .append(escape(PKColName)).append("' as pcn, '")
+	                            .append(escape(pkName)).append("' as pkn, ")
+	                            .append(RULE_MAP.get(foreignKey.getOnUpdate())).append(" as ur, ")
+	                            .append(RULE_MAP.get(foreignKey.getOnDelete())).append(" as dr, ");
+	
+	                        String fkName = foreignKey.getFkName();
+	                        
+	                        if (fkName != null){
+	                            exportedKeysQuery.append("'").append(escape(fkName)).append("' as fkn");
+	                        }
+	                        else {
+	                            exportedKeysQuery.append("'' as fkn");
+	                        }
+	                        
+	                        count++;
+	                    }
+                	}
+                }
+                finally {
+                    try{
+                        if (rs != null) rs.close();
+                    }catch(SQLException e) {}
+                }
+            }
+        }
+
+        boolean hasImportedKey = (count > 0);
+        StringBuilder sql = new StringBuilder(512);
+		sql.append("select ")
+            .append(catalog).append(" as PKTABLE_CAT, ")
+            .append(schema).append(" as PKTABLE_SCHEM, ")
+            .append(quote(target)).append(" as PKTABLE_NAME, ")
+            .append(hasImportedKey ? "pcn" : "''").append(" as PKCOLUMN_NAME, ")
+            .append(catalog).append(" as FKTABLE_CAT, ")
+            .append(schema).append(" as FKTABLE_SCHEM, ")
+            .append(hasImportedKey ? "fkt" : "''").append(" as FKTABLE_NAME, ")
+            .append(hasImportedKey ? "fcn" : "''").append(" as FKCOLUMN_NAME, ")
+            .append(hasImportedKey ? "ks" : "-1").append(" as KEY_SEQ, ")
+            .append(hasImportedKey ? "ur" : "3").append(" as UPDATE_RULE, ")
+            .append(hasImportedKey ? "dr" : "3").append(" as DELETE_RULE, ")
+            .append(hasImportedKey ? "fkn" : "''").append(" as FK_NAME, ")
+            .append(hasImportedKey ? "pkn" : "''").append(" as PK_NAME, ")
+            .append(Integer.toString(DatabaseMetaData.importedKeyInitiallyDeferred)) // FIXME: Check for pragma foreign_keys = true ?
+            .append(" as DEFERRABILITY ");
+
+        if (hasImportedKey) {
+            sql.append("from (").append(exportedKeysQuery).append(") ORDER BY FKTABLE_CAT, FKTABLE_SCHEM, FKTABLE_NAME, KEY_SEQ");
+        }
+        else {
+            sql.append("limit 0");
+        }
+
+        return ((CoreStatement)stat).executeQuery(sql.toString());
+    }
 
 	@Override
 	public ResultSet getCrossReference(String parentCatalog, String parentSchema, String parentTable,
