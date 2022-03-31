@@ -7,7 +7,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Array;
 import java.sql.Blob;
-import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Date;
 import java.sql.NClob;
@@ -28,6 +27,8 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
+
+import javax.sql.rowset.serial.SerialBlob;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -1136,8 +1137,19 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 
 	@Override
 	public Blob getBlob(int columnIndex) throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-//		return null;
+		if(values != null) {
+			Object result = values[row][checkCol(columnIndex)];
+			if (isNotNull(result)) {
+				if (result instanceof byte[]) {
+					return new SerialBlob((byte[]) result);
+				} else if (result instanceof String) {
+					return new SerialBlob(Base64.getDecoder().decode(((String) result).getBytes()));
+				} else {
+					throw new SQLException("not supported type '" + result.getClass().getName() + "'");
+				}
+			}
+		}
+		return null;
 	}
 
 	@Override
@@ -1166,14 +1178,13 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 
 	@Override
 	public Blob getBlob(String columnLabel) throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-//		return null;
+        return getBlob(findColumn(columnLabel));
 	}
 
 	@Override
 	public Clob getClob(String columnLabel) throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());		
-//        return null;
+		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
+//		return null;
 	}
 
 	@Override

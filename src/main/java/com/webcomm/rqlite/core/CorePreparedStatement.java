@@ -1,5 +1,6 @@
 package com.webcomm.rqlite.core;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
@@ -23,6 +24,8 @@ import java.util.Base64;
 import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.io.IOUtils;
 
 import com.google.gson.Gson;
 import com.webcomm.rqlite.RQLiteConnection;
@@ -290,6 +293,10 @@ public class CorePreparedStatement extends CoreStatement implements PreparedStat
         else if (x instanceof byte[]) {
         	batch(parameterIndex, Base64.getEncoder().encodeToString((byte[]) x));
         }
+        else if (x instanceof Blob ) {
+            byte[] ba = ((Blob) x).getBytes(1, (int) ((Blob) x).length()); 
+        	batch(parameterIndex, Base64.getEncoder().encodeToString((byte[]) ba));
+        }
         else if (x instanceof BigDecimal) {
             setBigDecimal(parameterIndex, (BigDecimal)x);
         }
@@ -337,14 +344,12 @@ public class CorePreparedStatement extends CoreStatement implements PreparedStat
 
 	@Override
 	public void setBlob(int parameterIndex, Blob x) throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-		
+		setObject(parameterIndex, x);
 	}
 
 	@Override
 	public void setClob(int parameterIndex, Clob x) throws SQLException {
 		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-		
 	}
 
 	@Override
@@ -427,8 +432,12 @@ public class CorePreparedStatement extends CoreStatement implements PreparedStat
 
 	@Override
 	public void setBlob(int parameterIndex, InputStream inputStream, long length) throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-		
+		try {
+			byte[] bytes = IOUtils.toByteArray(inputStream, length);
+			batch(parameterIndex, Base64.getEncoder().encodeToString(bytes));
+		} catch (IOException e) {
+			throw new SQLException("IOException : " + new Object(){}.getClass().getEnclosingMethod().getName() + e.getMessage());
+		}
 	}
 
 	@Override
@@ -499,8 +508,12 @@ public class CorePreparedStatement extends CoreStatement implements PreparedStat
 
 	@Override
 	public void setBlob(int parameterIndex, InputStream inputStream) throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-		
+		try {
+			byte[] bytes = IOUtils.toByteArray(inputStream);
+			batch(parameterIndex, Base64.getEncoder().encodeToString(bytes));
+		} catch (IOException e) {
+			throw new SQLException("IOException : " + new Object(){}.getClass().getEnclosingMethod().getName() + e.getMessage());
+		}
 	}
 
 	@Override
