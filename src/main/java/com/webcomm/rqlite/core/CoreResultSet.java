@@ -7,6 +7,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Array;
 import java.sql.Blob;
+import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Date;
 import java.sql.NClob;
@@ -22,6 +23,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -447,8 +449,19 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 
 	@Override
 	public byte[] getBytes(int columnIndex) throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-//		return null;
+		if(values != null) {
+			Object result = values[row][checkCol(columnIndex)];
+			if (isNotNull(result)) {
+				if (result instanceof byte[]) {
+					return (byte[]) result;
+				} else if (result instanceof String) {
+					return Base64.getDecoder().decode(((String) result).getBytes());
+				} else {
+					throw new SQLException("not supported type '" + result.getClass().getName() + "'");
+				}
+			}
+		}
+		return null;
 	}
 
 	@Override
@@ -1159,8 +1172,8 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 
 	@Override
 	public Clob getClob(String columnLabel) throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-//		return null;
+		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());		
+//        return null;
 	}
 
 	@Override

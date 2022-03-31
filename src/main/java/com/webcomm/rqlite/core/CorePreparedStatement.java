@@ -19,6 +19,7 @@ import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -287,7 +288,7 @@ public class CorePreparedStatement extends CoreStatement implements PreparedStat
             setBoolean(parameterIndex, ((Boolean) x).booleanValue());
         }
         else if (x instanceof byte[]) {
-            batch(parameterIndex, x.toString());
+        	batch(parameterIndex, Base64.getEncoder().encodeToString((byte[]) x));
         }
         else if (x instanceof BigDecimal) {
             setBigDecimal(parameterIndex, (BigDecimal)x);
