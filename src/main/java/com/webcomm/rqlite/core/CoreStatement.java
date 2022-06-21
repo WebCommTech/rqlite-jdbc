@@ -105,6 +105,11 @@ public class CoreStatement implements Statement, Codes {
 			Gson gson = new Gson();
 			log.debug("CoreStatement executeUpdate :" + gson.toJson(sql));
 			
+			if (!conn.getAutoCommit()) {
+				conn.getBufferSql().add(sql[0]);
+				return 1;
+			}
+			
 			ExecuteResults results = conn.getDatabase().executeUpdate(sql);
 
 			return checkResult(results);

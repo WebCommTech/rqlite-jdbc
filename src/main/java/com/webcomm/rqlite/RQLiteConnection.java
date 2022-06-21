@@ -16,11 +16,14 @@ import java.sql.SQLXML;
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
+import com.rqlite.NodeUnavailableException;
 import com.webcomm.rqlite.core.CoreDatabaseMetaData;
 import com.webcomm.rqlite.core.CorePreparedStatement;
 import com.webcomm.rqlite.core.CoreStatement;
@@ -34,6 +37,8 @@ public class RQLiteConnection implements Connection {
     private final DB db;
     private CoreDatabaseMetaData meta = null;
     private Map<String, Class<?>> typeMap;
+    private boolean autoCommit;
+    private List<Object> bufferSql;
 
     public RQLiteConnection(String url) throws SQLException {
         this(url, new Properties());
@@ -107,17 +112,28 @@ public class RQLiteConnection implements Connection {
 	@Override
 	public void setAutoCommit(boolean autoCommit) throws SQLException {
         checkOpen();
-		
+        this.autoCommit = autoCommit;
+        this.setBufferSql(new ArrayList<>());
 	}
 
 	@Override
 	public boolean getAutoCommit() throws SQLException {
-		return true;
+		return autoCommit;
 	}
 
 	@Override
 	public void commit() throws SQLException {
         checkOpen();
+        if (bufferSql.size() > 0) {
+        	try {
+				db.executeUpdate(bufferSql.toArray(new Object[bufferSql.size()]));
+				this.setBufferSql(new ArrayList<>());
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} catch (NodeUnavailableException e) {
+				e.printStackTrace();
+			}
+        }
 	}
 
 	@Override
@@ -395,5 +411,13 @@ public class RQLiteConnection implements Connection {
 	public int getNetworkTimeout() throws SQLException {
 		// Auto-generated method stub
 		return 0;
+	}
+
+	public List<Object> getBufferSql() {
+		return bufferSql;
+	}
+
+	public void setBufferSql(List<Object> bufferSql) {
+		this.bufferSql = bufferSql;
 	}
 }
