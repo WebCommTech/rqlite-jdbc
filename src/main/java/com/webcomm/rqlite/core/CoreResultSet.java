@@ -20,6 +20,7 @@ import java.sql.SQLXML;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
@@ -220,14 +221,19 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 
 	@Override
 	public int getPrecision(int column) throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-//		return 0;
+		
+		// TODO: need further test
+		return 1000;
 	}
 
 	@Override
 	public int getScale(int column) throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-//		return 0;
+		
+		if (getColumnType(column) != Types.FLOAT) {
+			return 0;
+		} else {
+			throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
+		}
 	}
 
 	@Override
@@ -244,8 +250,28 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 
 	@Override
 	public int getColumnType(int column) throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-//		return 0;
+		
+		if(cols != null) {
+			column = checkCol(column);
+			
+			log.debug("getColumnType : " + column + " --- " + colsMeta[column]);
+			switch (colsMeta[column]) {
+				case "integer":
+					return Types.INTEGER;
+				case "timestamp":
+					return Types.TIMESTAMP;
+				case "text":
+					return Types.VARCHAR;
+				// TODO: other data type case
+				default:
+					/**
+					 * sqlite function, like count() or date(), will return type: "" from rqlite API response
+					 */
+					return Types.VARCHAR;
+			}
+		}
+		
+		return Types.NULL;
 	}
 
 	@Override
@@ -718,8 +744,7 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 
 	@Override
 	public BigDecimal getBigDecimal(String columnLabel) throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-//		return null;
+		return getBigDecimal(columnLabel, getScale(findColumn(columnLabel)));
 	}
 
 	@Override
