@@ -143,11 +143,11 @@ public class CorePreparedStatement extends CoreStatement implements PreparedStat
 		if(batch != null) {
 			Object[] query = new Object[1];
 			query[0] = batch;
-			log.debug("CorePreparedStatement executeUpdate :" + gson.toJson(query));
+			log.debug("CorePreparedStatement executeUpdate for batch sql:" + gson.toJson(query));
 			return executeUpdate(query);
 		}
 		else {
-			log.debug("CorePreparedStatement executeUpdate : " + sql);
+			log.debug("CorePreparedStatement executeUpdate for single sql: " + sql);
 			return executeUpdate(sql);
 		}
 	}
