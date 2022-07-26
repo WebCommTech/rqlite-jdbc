@@ -250,34 +250,99 @@ public class CoreResultSet implements ResultSet, ResultSetMetaData {
 
 	@Override
 	public int getColumnType(int column) throws SQLException {
-		
+		/* only being used in native query and result is not entity */
 		if(cols != null) {
-			column = checkCol(column);
-			
-			log.debug("getColumnType : " + column + " --- " + colsMeta[column]);
-			switch (colsMeta[column]) {
-				case "integer":
-					return Types.INTEGER;
-				case "timestamp":
-					return Types.TIMESTAMP;
-				case "text":
-					return Types.VARCHAR;
-				// TODO: other data type case
-				default:
-					/**
-					 * sqlite function, like count() or date(), will return type: "" from rqlite API response
-					 */
-					return Types.VARCHAR;
-			}
+			String typeName = getColumnTypeName(column);
+			log.debug("typeName: " + typeName);
+			if ("BOOLEAN".equals(typeName)) {
+                return Types.BOOLEAN;
+            }
+
+            if ("TINYINT".equals(typeName)) {
+                return Types.TINYINT;
+            }
+
+            if ("SMALLINT".equals(typeName) || "INT2".equals(typeName)) {
+                return Types.SMALLINT;
+            }
+
+            if ("BIGINT".equals(typeName)
+                    || "INT8".equals(typeName)
+                    || "UNSIGNED BIG INT".equals(typeName)) {
+                return Types.BIGINT;
+            }
+
+            if ("DATE".equals(typeName) || "DATETIME".equals(typeName)) {
+                return Types.DATE;
+            }
+
+            if ("TIMESTAMP".equals(typeName)) {
+                return Types.TIMESTAMP;
+            }
+
+            if ("INT".equals(typeName) || "INTEGER".equals(typeName) || "MEDIUMINT".equals(typeName)) {
+                return Types.INTEGER;
+            }
+            
+            if ("DECIMAL".equals(typeName)) {
+                return Types.DECIMAL;
+            }
+
+            if ("DOUBLE".equals(typeName) || "DOUBLE PRECISION".equals(typeName)) {
+                return Types.DOUBLE;
+            }
+
+            if ("NUMERIC".equals(typeName)) {
+                return Types.NUMERIC;
+            }
+
+            if ("REAL".equals(typeName)) {
+                return Types.REAL;
+            }
+
+            if ("FLOAT".equals(typeName)) {
+                return Types.FLOAT;
+            }
+            
+            if ("CHARACTER".equals(typeName)
+                    || "NCHAR".equals(typeName)
+                    || "NATIVE CHARACTER".equals(typeName)
+                    || "CHAR".equals(typeName)) {
+                return Types.CHAR;
+            }
+
+            if ("CLOB".equals(typeName)) {
+                return Types.CLOB;
+            }
+
+            if ("VARCHAR".equals(typeName)
+                    || "VARYING CHARACTER".equals(typeName)
+                    || "NVARCHAR".equals(typeName)
+                    || "TEXT".equals(typeName)) {
+                return Types.VARCHAR;
+            }
+            
+            if ("BINARY".equals(typeName)) {
+                return Types.BINARY;
+            }
+
+            if ("BLOB".equals(typeName)) {
+                return Types.BLOB;
+            }
+            
+            return Types.VARCHAR; 
 		}
 		
 		return Types.NULL;
 	}
 
+	/* get from rqlite response body.results.types */
 	@Override
 	public String getColumnTypeName(int column) throws SQLException {
-		throw new SQLException("not implement : " + new Object(){}.getClass().getEnclosingMethod().getName());
-//		return null;
+		
+		column = checkCol(column);
+		
+		return colsMeta[column].toUpperCase();
 	}
 
 	@Override
